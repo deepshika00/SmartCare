@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SmartCare - Cognitive, Health, and Activity Monitoring Analytics Platform for hospitals and care centers. Tracks real-time ESP32 and Firebase metrics.">
+  <title>SmartCare - Care Analytics Dashboard</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo-icon">SC</div>
+        <div class="brand-info">
+          <h1>SmartCare</h1>
+          <span>Care Analytics</span>
+        </div>
+      </div>
+      
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-page="scores" id="nav-btn-scores">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Game Scores</span>
+        </button>
+        <button class="nav-btn" data-page="analysis" id="nav-btn-analysis">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Analysis</span>
+        </button>
+        <button class="nav-btn" data-page="weekly" id="nav-btn-weekly">
+          <i data-lucide="calendar-range"></i>
+          <span>Weekly Progress</span>
+        </button>
+        <button class="nav-btn" data-page="monthly" id="nav-btn-monthly">
+          <i data-lucide="trending-up"></i>
+          <span>Monthly Progress</span>
+        </button>
+        <button class="nav-btn" data-page="emergency" id="nav-btn-emergency">
+          <i data-lucide="alert-octagon"></i>
+          <span>Emergency Status</span>
+        </button>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="connection-status-card" id="firebase-status-card">
+          <div class="status-indicator-dot disconnected" id="firebase-indicator"></div>
+          <div class="connection-info">
+            <span class="status-label" id="firebase-status-label">Demo Mode</span>
+            <span class="status-action-link" id="firebase-config-trigger">Configure Sync</span>
+          </div>
+        </div>
+        <div class="system-time">
+          <i data-lucide="clock"></i>
+          <span id="header-clock">12:00:00 PM</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-layout">
+      
+      <header class="main-header">
+        <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" title="Toggle Sidebar">
+          <i data-lucide="menu"></i>
+        </button>
+        <div class="header-title">
+          <h2 id="current-page-title">SmartCare Dashboard</h2>
+          <p id="current-page-subtitle">Real-time cognitive performance tracking</p>
+        </div>
+        <div class="header-actions">
+          <div id="hardware-status-badge" class="inline-flex items-center gap-1.5 rounded-full bg-gray-500/10 px-2.5 py-1 text-xs font-medium text-gray-600">
+            <span id="deviceStatusDot" class="h-2 w-2 rounded-full bg-gray-400"></span>
+            <span id="deviceStatusText">Hardware Syncing...</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="content-viewport">
+        
+        <section id="scores" class="dashboard-page active">
+          <div class="section-header">
+            <h3>Cognitive Exercises Overview</h3>
+            <p>Monitors patient real-time answers and execution state</p>
+          </div>
+          <div class="cards-grid" id="score-cards-container">
+            <div class="game-card" id="game-card-0">
+              <div class="game-card-header">
+                <span class="game-title">Game 1: Colour Sequence</span>
+                <span class="game-status status-completed" id="game-status-0">Idle</span>
+              </div>
+              <div class="game-card-body">
+                <div class="score-display">
+                  <span class="score-fraction" id="game-score-0">0/4</span>
+                  <span class="score-percent" id="game-percent-0">0%</span>
+                </div>
+                <div class="score-progress-container">
+                  <div class="score-progress-bar progress-bar-fill" id="game-progress-0" style="width: 0%;"></div>
+                </div>
+                <div class="accuracy-label" id="game-acc-label-0" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
+              </div>
+            </div>
+
+            <div class="game-card" id="game-card-1">
+              <div class="game-card-header">
+                <span class="game-title">Game 2: Odd One Out</span>
+                <span class="game-status status-completed" id="game-status-1">Idle</span>
+              </div>
+              <div class="game-card-body">
+                <div class="score-display">
+                  <span class="score-fraction" id="game-score-1">0/4</span>
+                  <span class="score-percent" id="game-percent-1">0%</span>
+                </div>
+                <div class="score-progress-container">
+                  <div class="score-progress-bar progress-bar-fill" id="game-progress-1" style="width: 0%;"></div>
+                </div>
+                <div class="accuracy-label" id="game-acc-label-1" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
+              </div>
+            </div>
+
+            <div class="game-card" id="game-card-2">
+              <div class="game-card-header">
+                <span class="game-title">Game 3: Animal Sounds</span>
+                <span class="game-status status-completed" id="game-status-2">Idle</span>
+              </div>
+              <div class="game-card-body">
+                <div class="score-display">
+                  <span class="score-fraction" id="game-score-2">0/4</span>
+                  <span class="score-percent" id="game-percent-2">0%</span>
+                </div>
+                <div class="score-progress-container">
+                  <div class="score-progress-bar progress-bar-fill" id="game-progress-2" style="width: 0%;"></div>
+                </div>
+                <div class="accuracy-label" id="game-acc-label-2" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
+              </div>
+            </div>
+
+            <div class="game-card" id="game-card-3">
+              <div class="game-card-header">
+                <span class="game-title">Game 4: Sentence Game</span>
+                <span class="game-status status-completed" id="game-status-3">Idle</span>
+              </div>
+              <div class="game-card-body">
+                <div class="score-display">
+                  <span class="score-fraction" id="game-score-3">0/4</span>
+                  <span class="score-percent" id="game-percent-3">0%</span>
+                </div>
+                <div class="score-progress-container">
+                  <div class="score-progress-bar progress-bar-fill" id="game-progress-3" style="width: 0%;"></div>
+                </div>
+                <div class="accuracy-label" id="game-acc-label-3" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="analysis" class="dashboard-page">
+          <div class="section-header">
+            <h3>Cognitive Performance Analysis</h3>
+            <p>Detailed performance breakdown and response accuracy comparison</p>
+          </div>
+          <div class="analysis-grid">
+            <div class="grid-card left-panel">
+              <div class="card-header">
+                <i data-lucide="bar-chart-3" class="header-icon"></i>
+                <div>
+                  <h4>Performance Breakdown</h4>
+                  <span>Individual game score metrics</span>
+                </div>
+              </div>
+              <div class="card-body bar-chart-list" id="analysis-bar-chart-list">
+                </div>
+            </div>
+
+            <div class="grid-card right-panel">
+              <div class="card-header">
+                <i data-lucide="pie-chart" class="header-icon"></i>
+                <div>
+                  <h4 id="pie-game-title">Game 1: Colour Sequence</h4>
+                  <span>Accuracy distribution (Correct vs. Wrong)</span>
+                </div>
+              </div>
+              <div class="card-body pie-chart-content">
+                <div class="donut-chart-container">
+                  <div class="donut-chart" id="pie-conic-chart" style="background: conic-gradient(var(--primary) 0% 100%, #e2e8f0 100% 100%);">
+                    <div class="donut-hole">
+                      <span class="donut-percent" id="pie-center-percent">0%</span>
+                      <span class="donut-label">Correct</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="pie-metrics">
+                  <div class="metric-item correct">
+                    <span class="metric-dot"></span>
+                    <span class="metric-label">Correct Answers</span>
+                    <span class="metric-val" id="pie-correct-count">0</span>
+                  </div>
+                  <div class="metric-item wrong">
+                    <span class="metric-dot"></span>
+                    <span class="metric-label">Wrong Answers</span>
+                    <span class="metric-val" id="pie-wrong-count">0</span>
+                  </div>
+                </div>
+                <div class="game-btn-grid" id="pie-game-buttons">
+                  <button class="tab-select-btn active-btn" onclick="selectPieGame(0)">G1</button>
+                  <button class="tab-select-btn" onclick="selectPieGame(1)">G2</button>
+                  <button class="tab-select-btn" onclick="selectPieGame(2)">G3</button>
+                  <button class="tab-select-btn" onclick="selectPieGame(3)">G4</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="weekly" class="dashboard-page">
+          <div class="section-header">
+            <h3>Weekly Progress Trends</h3>
+            <p>Weekly exercise success metrics and consistency evaluation</p>
+          </div>
+          
+          <div class="stats-summary-grid">
+            <div class="stat-mini-card">
+              <div class="stat-icon-wrapper blue"><i data-lucide="calculator"></i></div>
+              <div class="stat-details">
+                <span class="stat-label">Average Score</span>
+                <span class="stat-value" id="weekly-avg-score">76%</span>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-wrapper green"><i data-lucide="award"></i></div>
+              <div class="stat-details">
+                <span class="stat-label">Best Day</span>
+                <span class="stat-value" id="weekly-best-day">Friday (92%)</span>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-wrapper teal"><i data-lucide="trending-up"></i></div>
+              <div class="stat-details">
+                <span class="stat-label">Weekly Trend</span>
+                <span class="stat-value text-success" id="weekly-trend-indicator">Improving</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-container-card">
+            <div class="chart-header">
+              <h4>Cognitive Accuracy Chart (Mon - Sun)</h4>
+              <span>Performance history measured in overall response accuracy (%)</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="weeklyChartCanvas"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section id="monthly" class="dashboard-page">
+          <div class="section-header">
+            <h3>Monthly Progress Overview</h3>
+            <p>Monthly cognitive resilience metrics and long-term trends</p>
+          </div>
+
+          <div class="stats-summary-grid">
+            <div class="stat-mini-card">
+              <div class="stat-icon-wrapper blue"><i data-lucide="bar-chart-4"></i></div>
+              <div class="stat-details">
+                <span class="stat-label">Monthly Average</span>
+                <span class="stat-value" id="monthly-avg-score">68.5%</span>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-wrapper green"><i data-lucide="crown"></i></div>
+              <div class="stat-details">
+                <span class="stat-label">Highest Week</span>
+                <span class="stat-value" id="monthly-highest-week">Week 4 (82%)</span>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-wrapper teal"><i data-lucide="check-check"></i></div>
+              <div class="stat-details">
+                <span class="stat-label">Consistency</span>
+                <span class="stat-value text-success" id="monthly-consistency-val">High (90%)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-container-card">
+            <div class="chart-header">
+              <h4>Weekly Average Trend (Weeks 1 - 4)</h4>
+              <span>Cognitive resilience curves and progression analytics</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="monthlyChartCanvas"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section id="emergency" class="dashboard-page">
+          <div class="section-header">
+            <h3>Emergency Alert Center</h3>
+            <p>Real-time emergency signal monitoring from the ESP32 physical trigger button</p>
+          </div>
+          
+          <div class="emergency-dashboard-grid">
+            <div class="emergency-banner-card" id="emergency-alert-card">
+              <div class="banner-icon-pulse" id="emergency-pulse-icon">
+                <i data-lucide="shield-alert" id="emergency-banner-icon"></i>
+              </div>
+              <div class="banner-text">
+                <h4 id="emergency-banner-title">Waiting for emergency alert...</h4>
+                <p id="emergency-banner-desc">System active. Monitoring wireless signals from ESP32 emergency broadcast nodes.</p>
+              </div>
+              <button class="clear-alert-btn hidden" id="emergency-clear-btn">
+                <i data-lucide="check-circle-2"></i> Clear Alert
+              </button>
+            </div>
+            
+            <div class="grid-card full-width">
+              <div class="card-header border-bottom">
+                <i data-lucide="history" class="header-icon"></i>
+                <div>
+                  <h4>Emergency Event Logs</h4>
+                  <span>Historical table of emergency trigger incidents</span>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table" id="emergency-logs-table">
+                  <thead>
+                    <tr>
+                      <th>Event ID</th>
+                      <th>Date</th>
+                      <th>Time of Press</th>
+                      <th>Device Node</th>
+                      <th>Status State</th>
+                    </tr>
+                  </thead>
+                  <tbody id="emergency-log-rows">
+                    </tbody>
+                </table>
+                <div class="no-logs-message" id="no-logs-msg">
+                  <i data-lucide="database-backup"></i>
+                  <p>No emergency alert logs logged in current session.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="simulator-drawer" id="simulator-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">
+          <i data-lucide="cpu"></i>
+          <h4>ESP32 Hardware Simulator</h4>
+        </div>
+        <button class="close-btn" id="simulator-close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer-body">
+        <div class="sim-section">
+          <h5>1. Emergency Button Trigger</h5>
+          <button class="sim-action-btn danger" id="sim-btn-emergency">
+            <i data-lucide="alert-triangle"></i> Press Emergency Button
+          </button>
+        </div>
+        <hr class="sim-divider">
+        <div class="sim-section">
+          <h5>2. Update Game Metrics</h5>
+          <div class="form-group">
+            <label for="sim-select-game">Select Active Game</label>
+            <select id="sim-select-game" class="sim-select">
+              <option value="0">Game 1: Colour Sequence</option>
+              <option value="1">Game 2: Odd One Out</option>
+              <option value="2">Game 3: Animal Sounds</option>
+              <option value="3">Game 4: Sentence Game</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="sim-input-score">Score</label>
+              <input type="number" id="sim-input-score" class="sim-input" min="0" max="4" value="3">
+            </div>
+            <div class="form-group half">
+              <label for="sim-input-total">Total</label>
+              <input type="number" id="sim-input-total" class="sim-input" min="1" max="4" value="4">
+            </div>
+          </div>
+          <button class="sim-action-btn primary" id="sim-btn-game-submit">
+            <i data-lucide="send"></i> Transmit Game Score
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="firebase-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title"><i data-lucide="settings"></i><h4>Configure Firebase Sync</h4></div>
+          <button class="close-btn" id="firebase-modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <form id="firebase-config-form">
+            <div class="form-group">
+              <label for="fb-database-url">Realtime Database URL *</label>
+              <input type="url" id="fb-database-url" class="modal-input" value="https://smartcare-1eb34-default-rtdb.firebaseio.com/" required>
+            </div>
+            <div class="modal-buttons">
+              <button type="button" class="modal-btn secondary" id="fb-btn-clear">Disconnect & Clear</button>
+              <button type="submit" class="modal-btn primary">Save & Connect</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-notification" id="toast-notify">
+      <div class="toast-icon"><i data-lucide="bell-ring"></i></div>
+      <div class="toast-body">
+        <span class="toast-title" id="toast-title">Notification</span>
+        <span class="toast-desc" id="toast-desc">Message body...</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <script>
+    (function() {
+      const targetConfig = {
+        databaseURL: "https://smartcare-1eb34-default-rtdb.firebaseio.com/",
+        projectId: "smartcare-1eb34"
+      };
+      localStorage.setItem("smartcare_firebase_config", JSON.stringify(targetConfig));
+      localStorage.setItem("firebaseConfig", JSON.stringify(targetConfig));
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.state) window.state.firebaseConfig = targetConfig;
+      });
+    })();
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
