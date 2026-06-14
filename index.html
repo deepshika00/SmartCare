@@ -1,453 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SmartCare - Cognitive, Health, and Activity Monitoring Analytics Platform for hospitals and care centers. Tracks real-time ESP32 and Firebase metrics.">
-  <title>SmartCare - Care Analytics Dashboard</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-
-  <div class="app-container">
-    
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="logo-icon">SC</div>
-        <div class="brand-info">
-          <h1>SmartCare</h1>
-          <span>Care Analytics</span>
-        </div>
-      </div>
-      
-      <nav class="nav-menu">
-        <button class="nav-btn active" data-page="scores" id="nav-btn-scores">
-          <i data-lucide="layout-dashboard"></i>
-          <span>Game Scores</span>
-        </button>
-        <button class="nav-btn" data-page="analysis" id="nav-btn-analysis">
-          <i data-lucide="bar-chart-3"></i>
-          <span>Analysis</span>
-        </button>
-        <button class="nav-btn" data-page="weekly" id="nav-btn-weekly">
-          <i data-lucide="calendar-range"></i>
-          <span>Weekly Progress</span>
-        </button>
-        <button class="nav-btn" data-page="monthly" id="nav-btn-monthly">
-          <i data-lucide="trending-up"></i>
-          <span>Monthly Progress</span>
-        </button>
-        <button class="nav-btn" data-page="emergency" id="nav-btn-emergency">
-          <i data-lucide="alert-octagon"></i>
-          <span>Emergency Status</span>
-        </button>
-      </nav>
-      
-      <div class="sidebar-footer">
-        <div class="connection-status-card" id="firebase-status-card">
-          <div class="status-indicator-dot disconnected" id="firebase-indicator"></div>
-          <div class="connection-info">
-            <span class="status-label" id="firebase-status-label">Demo Mode</span>
-            <span class="status-action-link" id="firebase-config-trigger">Configure Sync</span>
-          </div>
-        </div>
-        <div class="system-time">
-          <i data-lucide="clock"></i>
-          <span id="header-clock">12:00:00 PM</span>
-        </div>
-      </div>
-    </aside>
-
-    <div class="main-layout">
-      
-      <header class="main-header">
-        <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" title="Toggle Sidebar">
-          <i data-lucide="menu"></i>
-        </button>
-        <div class="header-title">
-          <h2 id="current-page-title">SmartCare Dashboard</h2>
-          <p id="current-page-subtitle">Real-time cognitive performance tracking</p>
-        </div>
-        <div class="header-actions">
-          <div id="hardware-status-badge" class="inline-flex items-center gap-1.5 rounded-full bg-gray-500/10 px-2.5 py-1 text-xs font-medium text-gray-600">
-            <span id="deviceStatusDot" class="h-2 w-2 rounded-full bg-gray-400"></span>
-            <span id="deviceStatusText">Hardware Syncing...</span>
-          </div>
-        </div>
-      </header>
-
-      <main class="content-viewport">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCare – Caretaker Intelligent Analysis Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* View Panel Layer Routings */
+        .dashboard-page { display: none; }
+        .dashboard-page.active { display: block; }
         
-        <section id="scores" class="dashboard-page active">
-          <div class="section-header">
-            <h3>Cognitive Exercises Overview</h3>
-            <p>Monitors patient real-time answers and execution state</p>
-          </div>
-          <div class="cards-grid" id="score-cards-container">
-            <div class="game-card" id="game-card-0">
-              <div class="game-card-header">
-                <span class="game-title">Game 1: Colour Sequence</span>
-                <span class="game-status status-completed" id="game-status-0">Idle</span>
-              </div>
-              <div class="game-card-body">
-                <div class="score-display">
-                  <span class="score-fraction" id="game-score-0">0/4</span>
-                  <span class="score-percent" id="game-percent-0">0%</span>
-                </div>
-                <div class="score-progress-container">
-                  <div class="score-progress-bar progress-bar-fill" id="game-progress-0" style="width: 0%;"></div>
-                </div>
-                <div class="accuracy-label" id="game-acc-label-0" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
-              </div>
-            </div>
+        /* Navigation Sidebar Styling Hooks */
+        .nav-menu .nav-btn.active {
+            background-color: #0f766e;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        /* Interactive Game Selection Buttons */
+        .tab-select-btn.active-btn {
+            background-color: #0f766e;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        /* Emergency Pulse Indicator Animations */
+        @keyframes emergencyPulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .alert-active {
+            animation: emergencyPulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased">
 
-            <div class="game-card" id="game-card-1">
-              <div class="game-card-header">
-                <span class="game-title">Game 2: Odd One Out</span>
-                <span class="game-status status-completed" id="game-status-1">Idle</span>
-              </div>
-              <div class="game-card-body">
-                <div class="score-display">
-                  <span class="score-fraction" id="game-score-1">0/4</span>
-                  <span class="score-percent" id="game-percent-1">0%</span>
-                </div>
-                <div class="score-progress-container">
-                  <div class="score-progress-bar progress-bar-fill" id="game-progress-1" style="width: 0%;"></div>
-                </div>
-                <div class="accuracy-label" id="game-acc-label-1" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
-              </div>
+    <div class="min-h-screen flex flex-col md:flex-row">
+        
+        <div class="md:hidden bg-white border-b border-slate-200 h-16 px-4 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center space-x-2">
+                <div class="h-8 w-8 bg-teal-700 text-white rounded-lg flex items-center justify-center font-black">S</div>
+                <span class="text-sm font-black tracking-tight text-slate-900">SMARTCARE</span>
             </div>
+            <button id="mobile-menu-toggle" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+                <i data-lucide="menu" class="h-6 w-6"></i>
+            </button>
+        </div>
 
-            <div class="game-card" id="game-card-2">
-              <div class="game-card-header">
-                <span class="game-title">Game 3: Animal Sounds</span>
-                <span class="game-status status-completed" id="game-status-2">Idle</span>
-              </div>
-              <div class="game-card-body">
-                <div class="score-display">
-                  <span class="score-fraction" id="game-score-2">0/4</span>
-                  <span class="score-percent" id="game-percent-2">0%</span>
-                </div>
-                <div class="score-progress-container">
-                  <div class="score-progress-bar progress-bar-fill" id="game-progress-2" style="width: 0%;"></div>
-                </div>
-                <div class="accuracy-label" id="game-acc-label-2" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
-              </div>
-            </div>
-
-            <div class="game-card" id="game-card-3">
-              <div class="game-card-header">
-                <span class="game-title">Game 4: Sentence Game</span>
-                <span class="game-status status-completed" id="game-status-3">Idle</span>
-              </div>
-              <div class="game-card-body">
-                <div class="score-display">
-                  <span class="score-fraction" id="game-score-3">0/4</span>
-                  <span class="score-percent" id="game-percent-3">0%</span>
-                </div>
-                <div class="score-progress-container">
-                  <div class="score-progress-bar progress-bar-fill" id="game-progress-3" style="width: 0%;"></div>
-                </div>
-                <div class="accuracy-label" id="game-acc-label-3" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">0% Accuracy</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="analysis" class="dashboard-page">
-          <div class="section-header">
-            <h3>Cognitive Performance Analysis</h3>
-            <p>Detailed performance breakdown and response accuracy comparison</p>
-          </div>
-          <div class="analysis-grid">
-            <div class="grid-card left-panel">
-              <div class="card-header">
-                <i data-lucide="bar-chart-3" class="header-icon"></i>
-                <div>
-                  <h4>Performance Breakdown</h4>
-                  <span>Individual game score metrics</span>
-                </div>
-              </div>
-              <div class="card-body bar-chart-list" id="analysis-bar-chart-list">
-                </div>
-            </div>
-
-            <div class="grid-card right-panel">
-              <div class="card-header">
-                <i data-lucide="pie-chart" class="header-icon"></i>
-                <div>
-                  <h4 id="pie-game-title">Game 1: Colour Sequence</h4>
-                  <span>Accuracy distribution (Correct vs. Wrong)</span>
-                </div>
-              </div>
-              <div class="card-body pie-chart-content">
-                <div class="donut-chart-container">
-                  <div class="donut-chart" id="pie-conic-chart" style="background: conic-gradient(var(--primary) 0% 100%, #e2e8f0 100% 100%);">
-                    <div class="donut-hole">
-                      <span class="donut-percent" id="pie-center-percent">0%</span>
-                      <span class="donut-label">Correct</span>
+        <aside id="sidebar-panel" class="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col justify-between fixed md:sticky top-16 md:top-0 h-[calc(100vh-4rem)] md:h-screen z-40 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out hidden md:flex">
+            <div>
+                <div class="hidden md:flex items-center space-x-3 mb-8 px-2">
+                    <div class="h-9 w-9 bg-teal-700 text-white rounded-xl flex items-center justify-center font-black shadow-md shadow-teal-100">S</div>
+                    <div>
+                        <h1 class="text-base font-black tracking-tight text-slate-900">SMARTCARE</h1>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-teal-700">Intelligent Analysis</p>
                     </div>
-                  </div>
                 </div>
-                <div class="pie-metrics">
-                  <div class="metric-item correct">
-                    <span class="metric-dot"></span>
-                    <span class="metric-label">Correct Answers</span>
-                    <span class="metric-val" id="pie-correct-count">0</span>
-                  </div>
-                  <div class="metric-item wrong">
-                    <span class="metric-dot"></span>
-                    <span class="metric-label">Wrong Answers</span>
-                    <span class="metric-val" id="pie-wrong-count">0</span>
-                  </div>
-                </div>
-                <div class="game-btn-grid" id="pie-game-buttons">
-                  <button class="tab-select-btn active-btn" onclick="selectPieGame(0)">G1</button>
-                  <button class="tab-select-btn" onclick="selectPieGame(1)">G2</button>
-                  <button class="tab-select-btn" onclick="selectPieGame(2)">G3</button>
-                  <button class="tab-select-btn" onclick="selectPieGame(3)">G4</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        <section id="weekly" class="dashboard-page">
-          <div class="section-header">
-            <h3>Weekly Progress Trends</h3>
-            <p>Weekly exercise success metrics and consistency evaluation</p>
-          </div>
-          
-          <div class="stats-summary-grid">
-            <div class="stat-mini-card">
-              <div class="stat-icon-wrapper blue"><i data-lucide="calculator"></i></div>
-              <div class="stat-details">
-                <span class="stat-label">Average Score</span>
-                <span class="stat-value" id="weekly-avg-score">76%</span>
-              </div>
+                <nav class="space-y-1.5 nav-menu">
+                    <button data-page="dashboard" class="nav-btn active w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all text-left">
+                        <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                        <span>Live Dashboard</span>
+                    </button>
+                    <button data-page="analysis" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all text-left">
+                        <i data-lucide="bar-chart-3" class="h-4 w-4"></i>
+                        <span>Game Performance</span>
+                    </button>
+                    <button data-page="weekly" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all text-left">
+                        <i data-lucide="calendar" class="h-4 w-4"></i>
+                        <span>Weekly Trends</span>
+                    </button>
+                    
+                    </button>
+                    <button data-page="emergency" class="nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all text-left">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="alert-triangle" class="h-4 w-4"></i>
+                            <span>Emergency Status</span>
+                        </div>
+                        <span id="nav-emergency-dot" class="h-2 w-2 rounded-full bg-red-500 hidden"></span>
+                    </button>
+                </nav>
             </div>
-            <div class="stat-mini-card">
-              <div class="stat-icon-wrapper green"><i data-lucide="award"></i></div>
-              <div class="stat-details">
-                <span class="stat-label">Best Day</span>
-                <span class="stat-value" id="weekly-best-day">Friday (92%)</span>
-              </div>
-            </div>
-            <div class="stat-mini-card">
-              <div class="stat-icon-wrapper teal"><i data-lucide="trending-up"></i></div>
-              <div class="stat-details">
-                <span class="stat-label">Weekly Trend</span>
-                <span class="stat-value text-success" id="weekly-trend-indicator">Improving</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="chart-container-card">
-            <div class="chart-header">
-              <h4>Cognitive Accuracy Chart (Mon - Sun)</h4>
-              <span>Performance history measured in overall response accuracy (%)</span>
-            </div>
-            <div class="chart-canvas-wrapper">
-              <canvas id="weeklyChartCanvas"></canvas>
-            </div>
-          </div>
-        </section>
-
-        <section id="monthly" class="dashboard-page">
-          <div class="section-header">
-            <h3>Monthly Progress Overview</h3>
-            <p>Monthly cognitive resilience metrics and long-term trends</p>
-          </div>
-
-          <div class="stats-summary-grid">
-            <div class="stat-mini-card">
-              <div class="stat-icon-wrapper blue"><i data-lucide="bar-chart-4"></i></div>
-              <div class="stat-details">
-                <span class="stat-label">Monthly Average</span>
-                <span class="stat-value" id="monthly-avg-score">68.5%</span>
-              </div>
-            </div>
-            <div class="stat-mini-card">
-              <div class="stat-icon-wrapper green"><i data-lucide="crown"></i></div>
-              <div class="stat-details">
-                <span class="stat-label">Highest Week</span>
-                <span class="stat-value" id="monthly-highest-week">Week 4 (82%)</span>
-              </div>
-            </div>
-            <div class="stat-mini-card">
-              <div class="stat-icon-wrapper teal"><i data-lucide="check-check"></i></div>
-              <div class="stat-details">
-                <span class="stat-label">Consistency</span>
-                <span class="stat-value text-success" id="monthly-consistency-val">High (90%)</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="chart-container-card">
-            <div class="chart-header">
-              <h4>Weekly Average Trend (Weeks 1 - 4)</h4>
-              <span>Cognitive resilience curves and progression analytics</span>
-            </div>
-            <div class="chart-canvas-wrapper">
-              <canvas id="monthlyChartCanvas"></canvas>
-            </div>
-          </div>
-        </section>
-
-        <section id="emergency" class="dashboard-page">
-          <div class="section-header">
-            <h3>Emergency Alert Center</h3>
-            <p>Real-time emergency signal monitoring from the ESP32 physical trigger button</p>
-          </div>
-          
-          <div class="emergency-dashboard-grid">
-            <div class="emergency-banner-card" id="emergency-alert-card">
-              <div class="banner-icon-pulse" id="emergency-pulse-icon">
-                <i data-lucide="shield-alert" id="emergency-banner-icon"></i>
-              </div>
-              <div class="banner-text">
-                <h4 id="emergency-banner-title">Waiting for emergency alert...</h4>
-                <p id="emergency-banner-desc">System active. Monitoring wireless signals from ESP32 emergency broadcast nodes.</p>
-              </div>
-              <button class="clear-alert-btn hidden" id="emergency-clear-btn">
-                <i data-lucide="check-circle-2"></i> Clear Alert
-              </button>
-            </div>
-            
-            <div class="grid-card full-width">
-              <div class="card-header border-bottom">
-                <i data-lucide="history" class="header-icon"></i>
+            <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-center space-x-3 mt-6 md:mt-0">
+                <span id="firebase-indicator" class="h-2.5 w-2.5 rounded-full bg-slate-300"></span>
                 <div>
-                  <h4>Emergency Event Logs</h4>
-                  <span>Historical table of emergency trigger incidents</span>
+                    <p id="firebase-status-label" class="text-xs font-bold text-slate-700">Connecting Network...</p>
+                    <p class="text-[10px] font-medium text-slate-400">Stream Node Sync active</p>
                 </div>
-              </div>
-              <div class="table-responsive">
-                <table class="data-table" id="emergency-logs-table">
-                  <thead>
-                    <tr>
-                      <th>Event ID</th>
-                      <th>Date</th>
-                      <th>Time of Press</th>
-                      <th>Device Node</th>
-                      <th>Status State</th>
-                    </tr>
-                  </thead>
-                  <tbody id="emergency-log-rows">
-                    </tbody>
-                </table>
-                <div class="no-logs-message" id="no-logs-msg">
-                  <i data-lucide="database-backup"></i>
-                  <p>No emergency alert logs logged in current session.</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 min-h-screen flex flex-col min-w-0">
+            <header class="hidden md:flex bg-white border-b border-slate-200 h-20 px-8 items-center justify-between sticky top-0 z-40">
+                <div>
+                    <h2 id="current-page-title" class="text-lg font-bold text-slate-900">SmartCare Dashboard</h2>
+                    <p id="current-page-subtitle" class="text-xs text-slate-500 font-medium">Real-Time Cognitive Monitoring</p>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 text-right">
+                        <span class="text-[10px] font-bold block uppercase tracking-wider text-slate-400">System Time</span>
+                        <span id="header-clock" class="text-xs font-bold font-mono text-slate-700">00:00:00 AM</span>
+                    </div>
+                </div>
+            </header>
 
-      </main>
+            <div class="p-4 md:p-8 flex-1 space-y-6 md:space-y-8 overflow-x-hidden">
+
+                <section id="dashboard" class="dashboard-page active space-y-6 md:space-y-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Games Played</span>
+                                <div class="bg-slate-50 p-2 rounded-lg text-slate-500"><i data-lucide="gamepad-2" class="h-4 w-4"></i></div>
+                            </div>
+                            <p id="summary-total-games" class="mt-2 md:mt-3 text-xl md:text-2xl font-black text-slate-900">0</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Avg Accuracy</span>
+                                <div class="bg-teal-50 p-2 rounded-lg text-teal-700"><i data-lucide="target" class="h-4 w-4"></i></div>
+                            </div>
+                            <p id="summary-avg-score" class="mt-2 md:mt-3 text-xl md:text-2xl font-black text-teal-700">0%</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm col-span-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Highest Game</span>
+                                <div class="bg-emerald-50 p-2 rounded-lg text-emerald-600"><i data-lucide="award" class="h-4 w-4"></i></div>
+                            </div>
+                            <p id="summary-best-game" class="mt-2 md:mt-3 text-sm md:text-base font-black truncate text-slate-900">--</p>
+                        </div>
+                        <div id="summary-emergency-card" class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm col-span-1 transition-all">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Emergency</span>
+                                <div id="summary-emergency-icon-bg" class="bg-slate-50 p-2 rounded-lg text-slate-500"><i data-lucide="shield" class="h-4 w-4"></i></div>
+                            </div>
+                            <p id="summary-emergency-status" class="mt-2 md:mt-3 text-xl md:text-2xl font-black text-slate-600">Normal</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm space-y-6">
+                            <div>
+                                <h3 class="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wide">Live Diagnostics Evaluation</h3>
+                                <p class="text-[11px] md:text-xs text-slate-400">Dynamic score analysis engines updating matching node changes directly</p>
+                            </div>
+
+                            <div class="space-y-4 md:space-y-5">
+                                <div class="border border-slate-100 bg-slate-50/50 rounded-xl p-3 md:p-4 space-y-3">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div>
+                                            <h4 class="text-xs md:text-sm font-bold text-slate-800">Game 1: Colour Sequence</h4>
+                                            <p id="insight-game1" class="text-[11px] md:text-xs text-teal-800 font-medium mt-0.5">Awaiting active node state...</p>
+                                        </div>
+                                        <div class="flex items-center justify-between sm:justify-end space-x-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                                            <span id="game-score-1" class="font-mono text-xs font-bold text-slate-500">0/0</span>
+                                            <span id="game-pct-1" class="text-xs font-bold text-slate-900">(0%)</span>
+                                            <span id="game-badge-1" class="text-[9px] md:text-[10px] font-bold border border-slate-200 px-2 py-0.5 bg-slate-50 text-slate-400 rounded-full uppercase tracking-wide">Idle</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                        <div id="game-progress-1" class="bg-teal-700 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="border border-slate-100 bg-slate-50/50 rounded-xl p-3 md:p-4 space-y-3">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div>
+                                            <h4 class="text-xs md:text-sm font-bold text-slate-800">Game 2: Odd One Out</h4>
+                                            <p id="insight-game2" class="text-[11px] md:text-xs text-teal-800 font-medium mt-0.5">Awaiting active node state...</p>
+                                        </div>
+                                        <div class="flex items-center justify-between sm:justify-end space-x-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                                            <span id="game-score-2" class="font-mono text-xs font-bold text-slate-500">0/0</span>
+                                            <span id="game-pct-2" class="text-xs font-bold text-slate-900">(0%)</span>
+                                            <span id="game-badge-2" class="text-[9px] md:text-[10px] font-bold border border-slate-200 px-2 py-0.5 bg-slate-50 text-slate-400 rounded-full uppercase tracking-wide">Idle</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                        <div id="game-progress-2" class="bg-teal-700 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="border border-slate-100 bg-slate-50/50 rounded-xl p-3 md:p-4 space-y-3">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div>
+                                            <h4 class="text-xs md:text-sm font-bold text-slate-800">Game 3: Animal Sounds</h4>
+                                            <p id="insight-game3" class="text-[11px] md:text-xs text-teal-800 font-medium mt-0.5">Awaiting active node state...</p>
+                                        </div>
+                                        <div class="flex items-center justify-between sm:justify-end space-x-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                                            <span id="game-score-3" class="font-mono text-xs font-bold text-slate-500">0/0</span>
+                                            <span id="game-pct-3" class="text-xs font-bold text-slate-900">(0%)</span>
+                                            <span id="game-badge-3" class="text-[9px] md:text-[10px] font-bold border border-slate-200 px-2 py-0.5 bg-slate-50 text-slate-400 rounded-full uppercase tracking-wide">Idle</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                        <div id="game-progress-3" class="bg-teal-700 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="border border-slate-100 bg-slate-50/50 rounded-xl p-3 md:p-4 space-y-3">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div>
+                                            <h4 class="text-xs md:text-sm font-bold text-slate-800">Game 4: Sentence Game</h4>
+                                            <p id="insight-game4" class="text-[11px] md:text-xs text-teal-800 font-medium mt-0.5">Awaiting active node state...</p>
+                                        </div>
+                                        <div class="flex items-center justify-between sm:justify-end space-x-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                                            <span id="game-score-4" class="font-mono text-xs font-bold text-slate-500">0/0</span>
+                                            <span id="game-pct-4" class="text-xs font-bold text-slate-900">(0%)</span>
+                                            <span id="game-badge-4" class="text-[9px] md:text-[10px] font-bold border border-slate-200 px-2 py-0.5 bg-slate-50 text-slate-400 rounded-full uppercase tracking-wide">Idle</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                        <div id="game-progress-4" class="bg-teal-700 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm space-y-4">
+                                <div class="flex items-center space-x-2 text-teal-700">
+                                    <i data-lucide="brain-circuit" class="h-4 w-4"></i>
+                                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Recommendations</h3>
+                                </div>
+                                <ul id="caretaker-recommendations-list" class="space-y-2.5">
+                                    <li class="text-xs text-slate-400 font-medium italic">Awaiting database calculations stream logic output...</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-slate-900 text-white rounded-2xl p-4 md:p-6 shadow-xl space-y-4">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Cognitive Focus Limits</h3>
+                                <div class="space-y-3">
+                                    <div class="border-l-2 border-teal-500 pl-3">
+                                        <p id="best-game-insight-label" class="text-[11px] md:text-xs text-slate-200 leading-relaxed font-medium">Strongest Area: --</p>
+                                    </div>
+                                    <div class="border-l-2 border-red-500 pl-3">
+                                        <p id="worst-game-insight-label" class="text-[11px] md:text-xs text-slate-200 leading-relaxed font-medium">Most Challenging: --</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Session Metric Analysis Summary</h3>
+                        <p id="session-analysis-summary-paragraph" class="text-xs md:text-sm text-slate-600 leading-relaxed">
+                            Awaiting diagnostic completion values matrix to calculate evaluation outputs...
+                        </p>
+                    </div>
+                </section>
+
+                <section id="analysis" class="dashboard-page space-y-6 md:space-y-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm flex flex-col justify-between">
+                            <h3 class="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Calculated Accuracy Percentages Map</h3>
+                            <div class="h-60 md:h-72 relative">
+                                <canvas id="analysisBarChartCanvas"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Pie-Chart Analysis</h3>
+                                <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl mb-4">
+                                    <button onclick="window.switchAnalysisGame(1)" class="tab-select-btn active-btn text-[10px] text-center py-2 rounded-lg transition-all truncate">G1</button>
+                                    <button onclick="window.switchAnalysisGame(2)" class="tab-select-btn text-slate-600 text-[10px] text-center py-2 rounded-lg transition-all truncate">G2</button>
+                                    <button onclick="window.switchAnalysisGame(3)" class="tab-select-btn text-slate-600 text-[10px] text-center py-2 rounded-lg transition-all truncate">G3</button>
+                                    <button onclick="window.switchAnalysisGame(4)" class="tab-select-btn text-slate-600 text-[10px] text-center py-2 rounded-lg transition-all truncate">G4</button>
+                                </div>
+                            </div>
+
+                            <div class="h-40 relative my-2">
+                                <canvas id="analysisPieChartCanvas"></canvas>
+                            </div>
+
+                            <div class="space-y-3 pt-3 border-t border-slate-100">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 font-medium">Correct Rate:</span>
+                                    <span id="pie-correct-val" class="font-bold text-teal-700">0%</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 font-medium">Wrong Rate:</span>
+                                    <span id="pie-wrong-val" class="font-bold text-red-500">0%</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 font-medium">Total Questions:</span>
+                                    <span id="pie-total-val" class="font-bold text-slate-900">0</span>
+                                </div>
+                                <p id="pie-analysis-statement" class="text-[11px] bg-slate-50 border border-slate-100 p-2.5 rounded-lg text-slate-600 italic font-medium text-center">
+                                    Select game tab to view parsed insight metrics.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="weekly" class="dashboard-page space-y-6 md:space-y-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Weekly Average</span>
+                            <p id="weekly-avg-val" class="mt-1 md:mt-2 text-lg md:text-xl font-black text-slate-900">0%</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Best Day Peak</span>
+                            <p id="weekly-best-val" class="mt-1 md:mt-2 text-xs md:text-base font-black truncate text-emerald-600">--</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Worst Day Drop</span>
+                            <p id="weekly-worst-val" class="mt-1 md:mt-2 text-xs md:text-base font-black truncate text-red-500">--</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Growth Rate Index</span>
+                            <p id="weekly-growth-val" class="mt-1 md:mt-2 text-lg md:text-xl font-black text-teal-700">0%</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm">
+                        <h3 class="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Historical Day-Aware Tracking Profile</h3>
+                        <div class="h-64 md:h-80 relative">
+                            <canvas id="weeklyTrendLineCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-teal-50 border border-teal-100 rounded-2xl p-4 md:p-5 shadow-sm">
+                        <h4 class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-teal-800 mb-1">Weekly Evaluation Matrix Summary</h4>
+                        <p id="weekly-paragraph-insight" class="text-xs md:text-sm text-teal-900 leading-relaxed font-medium">
+                            Awaiting sufficient timeline day metadata synchronization to calculate growth insights...
+                        </p>
+                    </div>
+                </section>
+
+                <section id="monthly" class="dashboard-page space-y-6 md:space-y-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Monthly Net Average</span>
+                            <p id="monthly-avg-val" class="mt-1 md:mt-2 text-lg md:text-xl font-black text-slate-900">0%</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Highest Week</span>
+                            <p id="monthly-highest-val" class="mt-1 md:mt-2 text-xs md:text-base font-black text-emerald-600">--</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Lowest Week</span>
+                            <p id="monthly-lowest-val" class="mt-1 md:mt-2 text-xs md:text-base font-black text-red-500">--</p>
+                        </div>
+                        <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Consistency Score</span>
+                            <p id="monthly-consistency-val" class="mt-1 md:mt-2 text-lg md:text-xl font-black text-teal-700">100</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-sm">
+                        <h3 class="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Longitudinal Performance Trend Curve</h3>
+                        <div class="h-64 md:h-80 relative">
+                            <canvas id="monthlyTrendLineCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 text-white rounded-2xl p-4 md:p-5 shadow-sm">
+                        <h4 class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Standard Deviation Matrix Analysis Narrative</h4>
+                        <p id="monthly-paragraph-insight" class="text-xs md:text-sm text-slate-300 leading-relaxed font-medium">
+                            Awaiting weekly summary block values to calculate longitudinal standard deviation metric profiles...
+                        </p>
+                    </div>
+                </section>
+
+             <section id="emergency" class="dashboard-page space-y-6 md:space-y-8">
+    <audio id="alert-sound" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3" preload="auto"></audio>
+
+    <div id="emergency-master-box" class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col items-center justify-center text-center max-w-2xl mx-auto transition-all duration-300">
+        <div id="emergency-icon-container" class="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-4">
+            <i id="emergency-graphic-icon" data-lucide="shield" class="h-8 w-8"></i>
+        </div>
+        
+        <h3 id="emergency-status-title" class="text-lg font-black uppercase tracking-wider text-slate-900">System Normal</h3>
+        <p id="emergency-status-desc" class="text-sm text-slate-400 font-medium mt-1">Monitoring active.</p>
+        
+        <div class="mt-8 flex flex-col items-center gap-4">
+            <button onclick="requestLiveLocation()" class="px-6 py-2 bg-teal-700 text-white rounded-lg font-bold text-sm hover:bg-teal-800 transition">
+                Live Tracking
+            </button>
+
+            <div id="waiting-alert-badge" class="hidden px-6 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg font-bold text-sm animate-pulse">
+                Waiting for device alert...
+            </div>
+
+            <a id="location-link" href="https://maps.app.goo.gl/b5A5DQxDSGBuLG367" target="_blank" 
+               class="hidden px-8 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition animate-bounce">
+                VIEW EMERGENCY LOCATION
+            </a>
+        </div>
+    </div>
+    
+    <div id="location-map-container" class="hidden w-full h-80 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+        <iframe width="100%" height="100%" frameborder="0" style="border:0" 
+            src="https://maps.app.goo.gl/b5A5DQxDSGBuLG367" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</section>
+
+            </div>
+        </main>
     </div>
 
-    <div class="simulator-drawer" id="simulator-drawer">
-      <div class="drawer-header">
-        <div class="drawer-title">
-          <i data-lucide="cpu"></i>
-          <h4>ESP32 Hardware Simulator</h4>
-        </div>
-        <button class="close-btn" id="simulator-close-btn"><i data-lucide="x"></i></button>
-      </div>
-      <div class="drawer-body">
-        <div class="sim-section">
-          <h5>1. Emergency Button Trigger</h5>
-          <button class="sim-action-btn danger" id="sim-btn-emergency">
-            <i data-lucide="alert-triangle"></i> Press Emergency Button
-          </button>
-        </div>
-        <hr class="sim-divider">
-        <div class="sim-section">
-          <h5>2. Update Game Metrics</h5>
-          <div class="form-group">
-            <label for="sim-select-game">Select Active Game</label>
-            <select id="sim-select-game" class="sim-select">
-              <option value="0">Game 1: Colour Sequence</option>
-              <option value="1">Game 2: Odd One Out</option>
-              <option value="2">Game 3: Animal Sounds</option>
-              <option value="3">Game 4: Sentence Game</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-group half">
-              <label for="sim-input-score">Score</label>
-              <input type="number" id="sim-input-score" class="sim-input" min="0" max="4" value="3">
-            </div>
-            <div class="form-group half">
-              <label for="sim-input-total">Total</label>
-              <input type="number" id="sim-input-total" class="sim-input" min="1" max="4" value="4">
-            </div>
-          </div>
-          <button class="sim-action-btn primary" id="sim-btn-game-submit">
-            <i data-lucide="send"></i> Transmit Game Score
-          </button>
-        </div>
-      </div>
-    </div>
+    <script src="script.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggleBtn = document.getElementById('mobile-menu-toggle');
+            const sidePanel = document.getElementById('sidebar-panel');
+            
+            if (menuToggleBtn && sidePanel) {
+                menuToggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidePanel.classList.toggle('hidden');
+                    sidePanel.classList.toggle('-translate-x-full');
+                });
 
-    <div class="modal-overlay" id="firebase-modal">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title"><i data-lucide="settings"></i><h4>Configure Firebase Sync</h4></div>
-          <button class="close-btn" id="firebase-modal-close"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body">
-          <form id="firebase-config-form">
-            <div class="form-group">
-              <label for="fb-database-url">Realtime Database URL *</label>
-              <input type="url" id="fb-database-url" class="modal-input" value="https://smartcare-1eb34-default-rtdb.firebaseio.com/" required>
-            </div>
-            <div class="modal-buttons">
-              <button type="button" class="modal-btn secondary" id="fb-btn-clear">Disconnect & Clear</button>
-              <button type="submit" class="modal-btn primary">Save & Connect</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+                // Auto collapse menu drawer panel when any selection button item gets tapped on mobile screens
+                sidePanel.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (window.innerWidth < 768) { // Only force toggle under mobile breakpoint views
+                            sidePanel.classList.add('hidden');
+                            sidePanel.classList.add('-translate-x-full');
+                        }
+                    });
+                });
 
-    <div class="toast-notification" id="toast-notify">
-      <div class="toast-icon"><i data-lucide="bell-ring"></i></div>
-      <div class="toast-body">
-        <span class="toast-title" id="toast-title">Notification</span>
-        <span class="toast-desc" id="toast-desc">Message body...</span>
-      </div>
-    </div>
-
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
-  <script>
-    (function() {
-      const targetConfig = {
-        databaseURL: "https://smartcare-1eb34-default-rtdb.firebaseio.com/",
-        projectId: "smartcare-1eb34"
-      };
-      localStorage.setItem("smartcare_firebase_config", JSON.stringify(targetConfig));
-      localStorage.setItem("firebaseConfig", JSON.stringify(targetConfig));
-      window.addEventListener('DOMContentLoaded', () => {
-        if (window.state) window.state.firebaseConfig = targetConfig;
-      });
-    })();
-  </script>
-
-  <script src="script.js"></script>
+                // Structural clean up collapse handle
+                document.body.addEventListener('click', () => {
+                    if (window.innerWidth < 768 && !sidePanel.classList.contains('-translate-x-full')) {
+                        sidePanel.classList.add('hidden');
+                        sidePanel.classList.add('-translate-x-full');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
